@@ -238,7 +238,7 @@ ping 192.168.200.3
 ```
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/1.lantodmzpingnotworking.png)
+![](screenshots/1.lantodmzpingnotworking.png)
 
 ---
 
@@ -293,7 +293,7 @@ ping 192.168.100.3
 
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/2.dmz_to_lan_ping_working.png)
+![](screenshots/2.dmz_to_lan_ping_working.png)
 
 ---
 
@@ -307,7 +307,7 @@ ping 8.8.8.8
 
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/3.internet_ping_not_working.png)
+![](screenshots/3.internet_ping_not_working.png)
 
 ---
 
@@ -434,7 +434,7 @@ ping 8.8.8.8
 Faire une capture du ping.
 
 ---
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/4.lan_to_wan.png)
+![](screenshots/4.lan_to_wan.png)
 
 ---
 
@@ -475,7 +475,7 @@ ping www.google.com
 
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/5.lan_dns_ping_not_working.png)
+![](screenshots/5.lan_dns_ping_not_working.png)
 
 ---
 
@@ -501,7 +501,7 @@ $ iptables -A FORWARD -p tcp --destination 192.168.100.0/24 --sport 53 -j ACCEPT
 </ol>
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/6.ping_dns_working.png)
+![](screenshots/6.ping_dns_working.png)
 
 ---
 
@@ -562,7 +562,7 @@ $ iptables -A FORWARD -p tcp -d 192.168.200.3 --sport 80 -j ACCEPT
 </ol>
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/7.lan_http_dmz.png)
+![](screenshots/7.lan_http_dmz.png)
 
 ---
 
@@ -596,7 +596,7 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
 
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/9.ssh_to_dmz.png)
+![](screenshots/9.ssh_to_dmz.png)
 
 ---
 
@@ -632,4 +632,4 @@ A présent, vous devriez avoir le matériel nécessaire afin de reproduire la ta
 </ol>
 ---
 
-![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/8.final_config.png)
+![](screenshots/8.final_config.png)
