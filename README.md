@@ -121,20 +121,29 @@ _Lors de la définition d'une zone, spécifier l'adresse du sous-réseau IP avec
 
 ---
 
-**LIVRABLE : Remplir le tableau**
-
-| Adresse IP source | Adresse IP destination |  Type   | Port src | Port dst | Action |
-| :---------------: | :--------------------: | :-----: | :------: | :------: | :----: |
-|        LAN        |          WAN           | TCP/UDP |    *     |    53    | Allow  |
-|        LAN        |          WAN           |  ICMP   |    -     |    -     | Allow  |
-|        LAN        |          DMZ           |  ICMP   |    -     |    -     | Allow  |
-|        DMZ        |          LAN           |  ICMP   |    -     |    -     | Allow  |
-|        LAN        |           *            |   TCP   |    *     |    80    | Allow  |
-|        LAN        |          WAN           |   TCP   |    *     |   8080   | Allow  |
-|        LAN        |          WAN           |   TCP   |    *     |   443    | Allow  |
-|         *         |     192.168.200.3      |   TCP   |    *     |    80    | Allow  |
-|        LAN        |     192.168.100.2      |   TCP   |    *     |    22    | Allow  |
-|         *         |           *            |    *    |    *     |    *     |  Drop  |
+| Adresse IP source | Adresse IP destination |     Type     | Port src | Port dst | Action |
+| :---------------: | :--------------------: | :----------: | :------: | :------: | :----: |
+|        LAN        |          WAN           |   TCP/UDP    |    *     |    53    | Allow  |
+|        WAN        |          LAN           |   TCP/UDP    |    53    |    *     | Allow  |
+|        LAN        |          WAN           | ICMP request |    -     |    -     | Allow  |
+|        WAN        |          LAN           |  ICMP reply  |    -     |    -     | Allow  |
+|        LAN        |          DMZ           | ICMP request |    -     |    -     | Allow  |
+|        DMZ        |          LAN           |  ICMP reply  |    -     |    -     | Allow  |
+|        DMZ        |          LAN           | ICMP request |    -     |    -     | Allow  |
+|        LAN        |          DMZ           |  ICMP reply  |    -     |    -     | Allow  |
+|        LAN        |           *            |     TCP      |    *     |    80    | Allow  |
+|         *         |          LAN           |     TCP      |    80    |    *     | Allow  |
+|        LAN        |          WAN           |     TCP      |    *     |   8080   | Allow  |
+|        WAN        |          LAN           |     TCP      |   8080   |    *     | Allow  |
+|        LAN        |          WAN           |     TCP      |    *     |   443    | Allow  |
+|        WAN        |          LAN           |     TCP      |   443    |    *     | Allow  |
+|         *         |     192.168.200.3      |     TCP      |    *     |    80    | Allow  |
+|   192.168.200.3   |           *            |     TCP      |    80    |    *     | Allow  |
+|   192.168.100.3   |     192.168.200.3      |     TCP      |    *     |    22    | Allow  |
+|   192.168.200.3   |     192.168.100.3      |     TCP      |    22    |    *     | Allow  |
+|   192.168.100.3   |     192.168.100.2      |     TCP      |    *     |    22    | Allow  |
+|   192.168.100.2   |     192.168.100.3      |     TCP      |    22    |    *     | Allow  |
+|         *         |           *            |      *       |    *     |    *     |  Drop  |
 
 ---
 
@@ -229,7 +238,7 @@ ping 192.168.200.3
 ```
 ---
 
-**LIVRABLE : capture d'écran de votre tentative de ping.**  
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/1.lantodmzpingnotworking.png)
 
 ---
 
@@ -284,7 +293,7 @@ ping 192.168.100.3
 
 ---
 
-**LIVRABLE : capture d'écran de votre nouvelle tentative de ping.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/2.dmz_to_lan_ping_working.png)
 
 ---
 
@@ -298,7 +307,7 @@ ping 8.8.8.8
 
 ---
 
-**LIVRABLE : capture d'écran de votre ping vers l'Internet.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/3.internet_ping_not_working.png)
 
 ---
 
@@ -331,7 +340,7 @@ La commande `iptables` définit une règle dans le tableau NAT qui permet la red
 
 L'autre commande démarre le service SSH du serveur.
 
-**ATTENTION :** Il faudra aussi définir un mot de passe pour pour les connexions ssh. Pour cela, utiliser la commande `passwd`.
+**ATTENTION :** Il faudra aussi définir un mot de passe pour pour les connexions ssh. Pour cela, utiliser la commande `passwd`. (Used the password `.Etml-1`).
 
 Vérifiez que la connexion à l'Internet est maintenant possible depuis les deux autres machines. Pas besoin de capture d'écran.
 
@@ -393,7 +402,22 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+# Set all chains policy to DROP
+$ iptables -P INPUT DROP
+$ iptables -P OUTPUT DROP
+$ iptables -P FORWARD DROP
+
+# LAN to DMZ
+$ iptables -A FORWARD -p icmp --icmp-type 8  -s 192.168.100.0/24 -d 192.168.200.0/24 -j ACCEPT
+$ iptables -A FORWARD -p icmp --icmp-type 0  -s 192.168.200.0/24 -d 192.168.100.0/24 -j ACCEPT
+
+# LAN to WAN
+$ iptables -A FORWARD -p icmp --icmp-type 8  -s 192.168.100.0/24 -o eth0 -j ACCEPT 
+$ iptables -A FORWARD -p icmp --icmp-type 0  -i eth0 -d 192.168.100.0/24 -j ACCEPT
+
+# DMZ to LAN
+$ iptables -A FORWARD -p icmp --icmp-type 8  -s 192.168.200.0/24 -d 192.168.100.0/24 -j ACCEPT
+$ iptables -A FORWARD -p icmp --icmp-type 0  -s 192.168.100.0/24 -d 192.168.200.0/24 -j ACCEPT
 ```
 ---
 
@@ -410,7 +434,7 @@ ping 8.8.8.8
 Faire une capture du ping.
 
 ---
-**LIVRABLE : capture d'écran de votre ping vers l'Internet.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/4.lan_to_wan.png)
 
 ---
 
@@ -420,20 +444,20 @@ Faire une capture du ping.
 </ol>
 
 
-| De Client\_in\_LAN à | OK/KO | Commentaires et explications |
-| :---                 | :---: | :---                         |
-| Interface DMZ du FW  |       |                              |
-| Interface LAN du FW  |       |                              |
-| Client LAN           |       |                              |
-| Serveur WAN          |       |                              |
+| De Client\_in\_LAN à | OK/KO | Commentaires et explications                                 |
+| :------------------- | :---: | :----------------------------------------------------------- |
+| Interface DMZ du FW  |  KO   | On a défini la policy par défaut qui est de DROP toutes les requêtes. Ensuite, nous avons défini des règles qui permettent seulement de transiter a travers le firewall. |
+| Interface LAN du FW  |  KO   | Idem que avant                                               |
+| Client LAN           |  OK   | Ping lui même                                                |
+| Serveur WAN          |  OK   | Ping autorisé vers le WAN, selon les règles que nous avons défini |
 
 
 | De Server\_in\_DMZ à | OK/KO | Commentaires et explications |
-| :---                 | :---: | :---                         |
-| Interface DMZ du FW  |       |                              |
-| Interface LAN du FW  |       |                              |
-| Serveur DMZ          |       |                              |
-| Serveur WAN          |       |                              |
+| :------------------- | :---: | :--------------------------- |
+| Interface DMZ du FW  |  KO   | Idem que les KO d'avant      |
+| Interface LAN du FW  |  KO   | Idem que avant               |
+| Serveur DMZ          |  OK   | Ping lui même                |
+| Serveur WAN          |  KO   | PIng non autorisé            |
 
 
 ## Règles pour le protocole DNS
@@ -451,7 +475,7 @@ ping www.google.com
 
 ---
 
-**LIVRABLE : capture d'écran de votre ping.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/5.lan_dns_ping_not_working.png)
 
 ---
 
@@ -462,7 +486,11 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+$ iptables -A FORWARD -p udp --source 192.168.100.0/24 --dport 53 -j ACCEPT
+$ iptables -A FORWARD -p tcp --source 192.168.100.0/24 --dport 53 -j ACCEPT
+
+$ iptables -A FORWARD -p udp --destination 192.168.100.0/24 --sport 53 -j ACCEPT
+$ iptables -A FORWARD -p tcp --destination 192.168.100.0/24 --sport 53 -j ACCEPT
 ```
 
 ---
@@ -473,7 +501,7 @@ LIVRABLE : Commandes iptables
 </ol>
 ---
 
-**LIVRABLE : capture d'écran de votre ping.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/6.ping_dns_working.png)
 
 ---
 
@@ -484,7 +512,7 @@ LIVRABLE : Commandes iptables
 ---
 **Réponse**
 
-**LIVRABLE : Votre réponse ici...**
+Nous avons autorisé les pings, mais cette fois, nous utilisons un nom de domaine et l'utilisation du protocol DNS n'était pas autorisé par le firewall et donc la résolution du nom n'était pas possible.
 
 ---
 
@@ -504,7 +532,14 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+$ iptables -A FORWARD -p tcp --source 192.168.100.0/24 --dport 80 -j ACCEPT
+$ iptables -A FORWARD -p tcp --destination 192.168.100.0/24 --sport 80 -j ACCEPT
+
+$ iptables -A FORWARD -p tcp --source 192.168.100.0/24 --dport 8080 -j ACCEPT
+$ iptables -A FORWARD -p tcp --destination 192.168.100.0/24 --sport 8080 -j ACCEPT
+
+$ iptables -A FORWARD -p tcp --source 192.168.100.0/24 --dport 443 -j ACCEPT
+$ iptables -A FORWARD -p tcp --destination 192.168.100.0/24 --sport 443 -j ACCEPT
 ```
 
 ---
@@ -516,7 +551,8 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+$ iptables -A FORWARD -p tcp -s 192.168.200.3 --dport 80 -j ACCEPT
+$ iptables -A FORWARD -p tcp -d 192.168.200.3 --sport 80 -j ACCEPT
 ```
 ---
 
@@ -526,7 +562,7 @@ LIVRABLE : Commandes iptables
 </ol>
 ---
 
-**LIVRABLE : capture d'écran.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/7.lan_http_dmz.png)
 
 ---
 
@@ -543,7 +579,11 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+$ iptables -A FORWARD -p tcp -s 192.168.100.3 -d 192.168.200.3  --dport 22 -j ACCEPT
+$ iptables -A FORWARD -p tcp -s 192.168.200.3 -d 192.168.100.3  --sport 22 -j ACCEPT
+
+$ iptables -A INPUT -p tcp -s 192.168.100.3 -d 192.168.100.2 --dport 22 -j ACCEPT
+$ iptables -A OUTPUT -p tcp -s 192.168.100.2 -d 192.168.100.3 --sport 22 -j ACCEPT
 ```
 
 ---
@@ -556,7 +596,7 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
 
 ---
 
-**LIVRABLE : capture d'écran de votre connexion ssh.**
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/9.ssh_to_dmz.png)
 
 ---
 
@@ -567,7 +607,7 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
 ---
 **Réponse**
 
-**LIVRABLE : Votre réponse ici...**
+Avoir un accès a distance sur le serveur, se qui facilite ça configuration et gestion.
 
 ---
 
@@ -575,12 +615,10 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
   <li>En général, à quoi faut-il particulièrement faire attention lors de l'écriture des règles du pare-feu pour ce type de connexion ? 
   </li>                                  
 </ol>
-
-
 ---
 **Réponse**
 
-**LIVRABLE : Votre réponse ici...**
+D'être le plus spécifique possible vis-à-vis des machines qui ont le droit de s'y connecter
 
 ---
 
@@ -594,6 +632,4 @@ A présent, vous devriez avoir le matériel nécessaire afin de reproduire la ta
 </ol>
 ---
 
-**LIVRABLE : capture d'écran avec toutes vos règles.**
-
----
+![](/home/ducky/HEIG-VD/S4/SRX/labo/lab02/screenshots/8.final_config.png)
